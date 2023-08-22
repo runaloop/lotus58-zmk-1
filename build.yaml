@@ -17,5 +17,5 @@ include:
     shield: lotus58_left
   - board: nrfmicro_14
     shield: lotus58_right
-    - board: nrfmicro_14
+  - board: nrfmicro_14
     shield: lotus58_right
