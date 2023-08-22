@@ -13,9 +13,9 @@
 #
 ---
 include:
-  - board: nrfmicro_14
+  - board: nrfmicro_13
     shield: lotus58_left
-  - board: nrfmicro_14
+  - board: nrfmicro_13
     shield: lotus58_right
-  - board: nrfmicro_14
+  - board: nrfmicro_13
     shield: settings_reset
