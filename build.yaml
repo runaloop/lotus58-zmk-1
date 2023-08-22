@@ -18,4 +18,4 @@ include:
   - board: nrfmicro_14
     shield: lotus58_right
   - board: nrfmicro_14
-    shield: lotus58_right
+    shield: settings_reset
