@@ -78,11 +78,11 @@
             //                     |  F11 |      |      |        |  |       |      |       |  F12  |
 
             bindings = <
-&kp GRAVE  &kp F1                      &kp F2                 &kp F3                    &kp F4      &kp F5                    &kp F6          &kp F7              &kp F8            &kp F9                   &kp F10                &kp KP_MINUS
-&trans     &kp KP_NUMBER_7             &kp KP_NUMBER_8        &kp KP_NUMBER_9           &kp INSERT  &kp HOME                  &kp C_VOL_UP    &kp PG_UP           &kp INS           &kp CARET                &kp PSCRN              &kp KP_PLUS
-&trans     &mt KP_NUMBER_4 LEFT_SHIFT  &mt KP_NUMBER_5 LCTRL  &mt KP_NUMBER_6 LEFT_ALT  &kp DELETE  &kp DLLR  &trans  &trans  &kp LEFT_ARROW  &mt DOWN RIGHT_GUI  &mt UP RIGHT_ALT  &mt RIGHT RIGHT_CONTROL  &mt TILDE RIGHT_SHIFT  &kp UNDER
-&trans     &kp KP_NUMBER_1             &kp KP_NUMBER_2        &kp KP_NUMBER_3           &kp RBRC    &kp AMPS  &trans  &trans  &kp C_MUTE      &kp PG_DN           &kp DOWN          &kp COLON                &kp STAR               &kp PIPE
-                                                              &kp KP_NUMBER_0           &trans      &trans    &trans  &trans  &trans          &trans              &kp F12
+&trans  &kp F1                      &kp F2                 &kp F3                    &kp F4      &kp F5                      &kp F6          &kp F7              &kp F8            &kp F9                   &kp F10                &kp KP_MINUS
+&trans  &kp KP_NUMBER_7             &kp KP_NUMBER_8        &kp KP_NUMBER_9           &kp INSERT  &kp HOME                    &trans          &trans              &trans            &trans                   &kp PSCRN              &kp KP_PLUS
+&trans  &mt KP_NUMBER_4 LEFT_SHIFT  &mt KP_NUMBER_5 LCTRL  &mt KP_NUMBER_6 LEFT_ALT  &kp DELETE  &kp END   &trans   &trans   &kp LEFT_ARROW  &mt DOWN RIGHT_GUI  &mt UP RIGHT_ALT  &mt RIGHT RIGHT_CONTROL  &mt TILDE RIGHT_SHIFT  &trans
+&trans  &kp KP_NUMBER_1             &kp KP_NUMBER_2        &kp KP_NUMBER_3           &trans      &trans    &kp F11  &kp F12  &trans          &trans              &trans            &trans                   &trans                 &trans
+                                                           &kp KP_NUMBER_0           &trans      &trans    &trans   &trans   &trans          &trans              &trans
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP &inc_dec_kp C_NEXT C_PREV>;
