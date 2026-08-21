@@ -9,41 +9,85 @@
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/outputs.h>
 
+/*
+ * Key position map (60 positions).
+ *
+ *   0  1  2  3  4  5              6  7  8  9 10 11
+ *  12 13 14 15 16 17             18 19 20 21 22 23
+ *  24 25 26 27 28 29 30       31 32 33 34 35 36 37
+ *  38 39 40 41 42 43 44       45 46 47 48 49 50 51
+ *           52 53 54 55       56 57 58 59
+ */
+
+#define LEFT_KEYS   0  1  2  3  4  5 12 13 14 15 16 17 24 25 26 27 28 29 30 38 39 40 41 42 43 44
+#define RIGHT_KEYS  6  7  8  9 10 11 18 19 20 21 22 23 31 32 33 34 35 36 37 45 46 47 48 49 50 51
+#define THUMBS     52 53 54 55 56 57 58 59
+
+#define DEF 0
+#define LWR 1
+#define RSE 2
+
 / {
     combos {
         compatible = "zmk,combos";
 
+        /* Left shift + left inner thumb -> LGUI */
         combo_dsklg {
             timeout-ms = <100>;
             key-positions = <24 52>;
-            layers = <0>;
+            layers = <DEF>;
             bindings = <&kp LGUI>;
+        };
+
+        /* J + K -> ESC, the vim "jk" escape, but at firmware level */
+        combo_esc {
+            timeout-ms = <50>;
+            require-prior-idle-ms = <150>;
+            key-positions = <33 34>;
+            layers = <DEF>;
+            bindings = <&kp ESC>;
         };
     };
 
     behaviors {
+        /*
+         * Timeless home row mods.
+         *
+         * A modifier only engages when the *next* key is on the opposite half
+         * (hold-trigger-key-positions), so same-hand rolls during fast typing
+         * always resolve as plain letters. require-prior-idle-ms additionally
+         * forces a tap whenever the key follows another keystroke closely.
+         */
+        hml: home_row_mod_left {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <280>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <150>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <RIGHT_KEYS THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        hmr: home_row_mod_right {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <280>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <150>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <LEFT_KEYS THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        /* 4 alone, F4 when held with either Alt (so Alt+4 types Alt+F4) */
         fofunc: four_ffour {
             compatible = "zmk,behavior-mod-morph";
             #binding-cells = <0>;
             bindings = <&kp N4>, <&kp F4>;
-
             mods = <(MOD_LALT|MOD_RALT)>;
-        };
-
-        sleft: s_left {
-            compatible = "zmk,behavior-mod-morph";
-            #binding-cells = <0>;
-            bindings = <&kp S>, <&kp LEFT>;
-
-            mods = <(MOD_LGUI|MOD_RGUI)>;
-        };
-
-        fright: f_right {
-            compatible = "zmk,behavior-mod-morph";
-            #binding-cells = <0>;
-            bindings = <&kp F>, <&kp RIGHT>;
-
-            mods = <(MOD_LGUI|MOD_RGUI)>;
         };
     };
 
@@ -51,31 +95,37 @@
         compatible = "zmk,keymap";
 
         default_layer {
-            //   ------------------------------------------------------------------------------------------------------------
-            //  0|  ESC  |  1  |  2  |  3   |  4   |  5   |                     |  6   |  7    |  8    |  9   |   0   |   =   | 11
-            // 12|  TAB  |  Q  |  W  |  E   |  R   |  T   |                     |  Y   |  U    |  I    |  O   |   P   |   [   | 23
-            // 24|  SFT  |  A  |  S  |  D   |  F   |  G   |  RESET  |  | RESET  |  H   |  J    |  K    |  L   |   ;   | ' SFT | 37
-            // 38|  CTRL |  Z  |  X  |  C   |  V   |  B   |  MUTE   |  | PLAY   |  N   |  M    |  ,    |  .   |   /   | \ CTRL| 51
-            // 52                    |ENT RS|  ALT | SPACE|DELETE LW|  |ENTER RS| BSPC |  ] LW | RGUI  |                        59
+            display-name = "Base";
+
+            // ---------------------------------------------------------------------------------------------------------------
+            //  0| ESC   |  1  |  2  |  3  |  4/F4 |  5  |                       |  6  |  7  |  8  |  9  |  0   |  -   | 11
+            // 12| TAB   |  Q  |  W  |  E  |  R    |  T  |                       |  Y  |  U  |  I  |  O  |  P   |  =   | 23
+            // 24| SHIFT |A/GUI|S/ALT|D/CTL| F/SFT |  G  | MUTE  |    | PLAY     |  H  |J/SFT|K/CTL|L/ALT| ;/GUI|  '   | 37
+            // 38| CTRL  |  Z  |  X  |  C  |  V    |  B  |  [    |    |  ]       |  N  |  M  |  ,  |  .  |  /   |'/CTL | 51
+            // 52                     GUI  |  ALT  |SPACE| LOWER |    |ENT/RAISE |BSPC | DEL |ENTER|                     59
+            //
+            // J+K -> ESC.  Home row mods only fire in combination with the other half.
 
             bindings = <
-&kp ESC    &kp N1  &kp N2  &kp N3            &fofunc   &kp N5                                          &kp N6    &kp N7      &kp N8     &kp N9   &kp N0    &kp MINUS
-&kp TAB    &kp Q   &kp W   &kp E             &kp R     &kp T                                           &kp Y     &kp U       &kp I      &kp O    &kp P     &kp EQUAL
-&kp LSHFT  &kp A   &sleft  &kp D             &fright   &kp G      &kp C_MUTE        &kp C_PLAY_PAUSE   &kp H     &kp J       &kp K      &kp L    &kp SEMI  &kp SQT
-&kp LCTRL  &kp Z   &kp X   &kp C             &kp V     &kp B      &kp LEFT_BRACKET  &kp RIGHT_BRACKET  &kp N     &kp M       &kp COMMA  &kp DOT  &kp FSLH  &mt RCTRL BSLH
-                           &kp LG(LEFT_WIN)  &kp LALT  &kp SPACE  &mo 1             &mo 2              &kp BSPC  &kp DELETE  &kp ENTER
+&kp ESC    &kp N1        &kp N2        &kp N3         &fofunc        &kp N5                                          &kp N6             &kp N7    &kp N8        &kp N9        &kp N0        &kp MINUS
+&kp TAB    &kp Q         &kp W         &kp E          &kp R          &kp T                                           &kp Y              &kp U     &kp I         &kp O         &kp P         &kp EQUAL
+&kp LSHFT  &hml LGUI A   &hml LALT S   &hml LCTRL D   &hml LSHFT F   &kp G      &kp C_MUTE        &kp C_PLAY_PAUSE   &kp H              &hmr RSHFT J  &hmr RCTRL K  &hmr RALT L   &hmr RGUI SEMI  &kp SQT
+&kp LCTRL  &kp Z         &kp X         &kp C          &kp V          &kp B      &kp LEFT_BRACKET  &kp RIGHT_BRACKET  &kp N              &kp M     &kp COMMA     &kp DOT       &kp FSLH      &mt RCTRL BSLH
+                                       &kp LGUI       &kp LALT       &kp SPACE  &mo LWR           &lt RSE ENTER      &kp BSPC           &kp DELETE  &kp ENTER
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP &inc_dec_kp PG_UP PG_DN>;
         };
 
         lower_layer {
-            // ------------------------------------------------------------------------------------------------------------
-            // | `     |  F1 |  F2 |  F3  |  F4  |  F5  |                   |  F6  |  F7   |  F8   |  F9  |  F10  |  F11  |
-            // |       |  !  | HOME|   ^  |  END |  %   |                   | VOL^ |  PGUP |  INS  |  ^   |  PSCR |   -   |
-            // |       |  #  |  <- |   v  | ->   |  $   |        |  |       | VOLv |    <- |   ^   |  ->  |   ~   |   _   |
-            // |       |  @  |  -  |  (   |  )   |  &   |        |  |       | MUTE |  PGDN |   v   |  :   |   *   |   |   |
-            //                     |  F11 |      |      |        |  |       |      |       |  F12  |
+            display-name = "Lower";
+
+            // ---------------------------------------------------------------------------------------------------------------
+            //  0| `     | F1  | F2  | F3  | F4  | F5  |                     | F6   | F7   | F8  | F9  | F10  |  _   | 11
+            // 12|       |  !  | HOME|  ^  | END |  %  |                     | VOL+ | PGUP | INS |  ^  | PSCR |  +   | 23
+            // 24|       |  #  |  <- |  v  |  -> |  $  |     |    |          | VOL- |  <-  |  ^  |  -> |  ~   |  _   | 37
+            // 38|       |  @  |  -  |  {  |  }  |  &  |     |    |          | MUTE | PGDN |  v  |  :  |  *   |  |   | 51
+            // 52                     F11  |     |     |     |    |          |      |      | F12 |                     59
 
             bindings = <
 &kp GRAVE  &kp F1    &kp F2     &kp F3    &kp F4     &kp F5                     &kp F6        &kp F7     &kp F8    &kp F9     &kp F10    &kp UNDERSCORE
@@ -89,15 +139,19 @@
         };
 
         raise_layer {
-            // ------------------------------------------------------------------------------------------------------------
-            // |BTCLR| BT1  | BT2  |  BT3  |  BT4  |  BT5 |                |OUTTOG|OUTUSB| OUTBT |      | RESET | FLASH |
-            // |     | INS  | PSCR | GUI   | RESET |      |                | PGUP |      |   ^   |      |       |       |
-            // |     | ALT  | CTRL | SHIFT | FLASH | CAPS |      |  |      | PGDN |   <- |   v   |  ->  |  DEL  | BSPC  |
-            // |     | UNDO | CUT  | COPY  | PASTE |      |      |  |      |      |  |>  |  <|<| | |>|> |       |       |
-            //                     |       |       |      |      |  |      |      |      |       |
+            display-name = "Raise";
+
+            // ---------------------------------------------------------------------------------------------------------------
+            //  0| BTCLR | BT1  | BT2  | BT3   | BT4   | BT5  |                | OUTTOG| OUTUSB| OUTBT | STUDIO| RESET | BOOTL | 11
+            // 12|       | INS  | PSCR | MENU  | RESET |      |                | PGUP  |       |   ^   |       |       |       | 23
+            // 24|       | ALT  | CTRL | SHIFT | BOOTL | CAPS |    |    |      | PGDN  |  <-   |   v   |  ->   |  DEL  | BSPC  | 37
+            // 38|       | UNDO | CUT  | COPY  | PASTE |      |    |    |      |       | PLAY  | PREV  | NEXT  |       |       | 51
+            // 52                        |     |       |      |    |    |      |       |       |       |                        59
+            //
+            // STUDIO = &studio_unlock, required to let ZMK Studio edit the keymap live.
 
             bindings = <
-&bt BT_CLR  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4                  &out OUT_TOG  &out OUT_USB  &out OUT_BLE  &trans      &sys_reset  &bootloader
+&bt BT_CLR  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4                  &out OUT_TOG  &out OUT_USB  &out OUT_BLE  &studio_unlock  &sys_reset  &bootloader
 &trans      &kp INS       &kp PSCRN     &kp K_CMENU   &sys_reset    &trans                        &kp PG_UP     &trans        &kp UP        &trans      &trans      &trans
 &trans      &kp LALT      &kp LCTRL     &kp LSHFT     &bootloader   &kp CLCK      &trans  &trans  &kp PG_DN     &kp LEFT      &kp DOWN      &kp RIGHT   &kp DEL     &kp BSPC
 &trans      &kp K_UNDO    &kp K_CUT     &kp K_COPY    &kp K_PASTE   &trans        &trans  &trans  &trans        &kp C_PP      &kp C_PREV    &kp C_NEXT  &trans      &trans

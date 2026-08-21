@@ -1,0 +1,12 @@
+draw_config:
+  key_w: 62
+  key_h: 58
+  combo_w: 30
+  combo_h: 26
+  n_columns: 1
+  separate_combo_diagrams: false
+  draw_key_sides: true
+  append_colon_to_layer_header: false
+  svg_extra_style: |
+    text.label { font-size: 11px; }
+    text.hold { fill: #b34d4d; }
