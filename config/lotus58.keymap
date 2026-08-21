@@ -31,7 +31,7 @@
     combos {
         compatible = "zmk,combos";
 
-        /* Left shift + left inner thumb -> LGUI */
+        /* Left shift + left outer thumb -> LGUI */
         combo_dsklg {
             timeout-ms = <100>;
             key-positions = <24 52>;
@@ -57,6 +57,10 @@
          * (hold-trigger-key-positions), so same-hand rolls during fast typing
          * always resolve as plain letters. require-prior-idle-ms additionally
          * forces a tap whenever the key follows another keystroke closely.
+         *
+         * This is what plain &mt cannot do: &mt defaults to hold-preferred
+         * with a 200ms term and no positional guard, which misfires constantly
+         * on the home row.
          */
         hml: home_row_mod_left {
             compatible = "zmk,behavior-hold-tap";
@@ -66,7 +70,12 @@
             quick-tap-ms = <175>;
             require-prior-idle-ms = <150>;
             bindings = <&kp>, <&kp>;
-            hold-trigger-key-positions = <RIGHT_KEYS THUMBS>;
+            /*
+             * TAB (12) is deliberately allowed even though it sits on the left
+             * hand: without it Alt+Tab would be impossible, since both Alt and
+             * Tab live on the same half.
+             */
+            hold-trigger-key-positions = <RIGHT_KEYS THUMBS 12>;
             hold-trigger-on-release;
         };
 
@@ -82,12 +91,18 @@
             hold-trigger-on-release;
         };
 
-        /* 4 alone, F4 when held with either Alt (so Alt+4 types Alt+F4) */
-        fofunc: four_ffour {
-            compatible = "zmk,behavior-mod-morph";
-            #binding-cells = <0>;
-            bindings = <&kp N4>, <&kp F4>;
-            mods = <(MOD_LALT|MOD_RALT)>;
+        /*
+         * Number row: tap types the digit, holding reaches the F-key.
+         * tap-preferred means any other keypress before the term resolves as
+         * a tap, so typing numbers at speed never produces an F-key.
+         */
+        numfn: num_fn {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "tap-preferred";
+            tapping-term-ms = <250>;
+            quick-tap-ms = <200>;
+            bindings = <&kp>, <&kp>;
         };
     };
 
@@ -97,21 +112,22 @@
         default_layer {
             display-name = "Base";
 
-            // ---------------------------------------------------------------------------------------------------------------
-            //  0| ESC   |  1  |  2  |  3  |  4/F4 |  5  |                       |  6  |  7  |  8  |  9  |  0   |  -   | 11
-            // 12| TAB   |  Q  |  W  |  E  |  R    |  T  |                       |  Y  |  U  |  I  |  O  |  P   |  =   | 23
-            // 24| SHIFT |A/GUI|S/ALT|D/CTL| F/SFT |  G  | MUTE  |    | PLAY     |  H  |J/SFT|K/CTL|L/ALT| ;/GUI|  '   | 37
-            // 38| CTRL  |  Z  |  X  |  C  |  V    |  B  |  [    |    |  ]       |  N  |  M  |  ,  |  .  |  /   |'/CTL | 51
-            // 52                     GUI  |  ALT  |SPACE| LOWER |    |ENT/RAISE |BSPC | DEL |ENTER|                     59
+            // ------------------------------------------------------------------------------------------------------------------
+            //  0| ESC   | 1/F1 | 2/F2 | 3/F3 | 4/F4 | 5/F5 |                     | 6/F6 | 7/F7 | 8/F8 | 9/F9 | 0/F10| -/F11 | 11
+            // 12| TAB   |  Q   |  W   |  E   |  R   |  T   |                     |  Y   |  U   |  I   |  O   |  P   | =/F12 | 23
+            // 24| SHIFT |A/GUI |S/ALT |D/CTRL|F/SHFT|  G   | MUTE |     | PLAY   |  H   |J/SHFT|K/CTRL|L/ALT | ;/GUI|   '   | 37
+            // 38| CTRL  |  Z   |  X   |  C   |  V   |  B   |  [   |     |  ]     |  N   |  M   |  ,   |  .   |  /   |   \   | 51
+            // 52                      LOWER  | RAISE| LOWER| SPACE|     | ENTER  | BSPC | DEL  | RAISE|                        59
             //
-            // J+K -> ESC.  Home row mods only fire in combination with the other half.
+            // J+K -> ESC.  Home row mods only fire together with the other half.
+            // , . / additionally reach the numpad variants when held.
 
             bindings = <
-&kp ESC    &kp N1        &kp N2        &kp N3         &fofunc        &kp N5                                          &kp N6             &kp N7    &kp N8        &kp N9        &kp N0        &kp MINUS
-&kp TAB    &kp Q         &kp W         &kp E          &kp R          &kp T                                           &kp Y              &kp U     &kp I         &kp O         &kp P         &kp EQUAL
-&kp LSHFT  &hml LGUI A   &hml LALT S   &hml LCTRL D   &hml LSHFT F   &kp G      &kp C_MUTE        &kp C_PLAY_PAUSE   &kp H              &hmr RSHFT J  &hmr RCTRL K  &hmr RALT L   &hmr RGUI SEMI  &kp SQT
-&kp LCTRL  &kp Z         &kp X         &kp C          &kp V          &kp B      &kp LEFT_BRACKET  &kp RIGHT_BRACKET  &kp N              &kp M     &kp COMMA     &kp DOT       &kp FSLH      &mt RCTRL BSLH
-                                       &kp LGUI       &kp LALT       &kp SPACE  &mo LWR           &lt RSE ENTER      &kp BSPC           &kp DELETE  &kp ENTER
+&kp ESC    &numfn F1 N1  &numfn F2 N2  &numfn F3 N3   &numfn F4 N4   &numfn F5 N5                                      &numfn F6 N6      &numfn F7 N7  &numfn F8 N8         &numfn F9 N9    &numfn F10 N0   &numfn F11 MINUS
+&kp TAB    &kp Q         &kp W         &kp E          &kp R          &kp T                                             &kp Y             &kp U         &kp I                &kp O           &kp P           &numfn F12 EQUAL
+&kp LSHFT  &hml LGUI A   &hml LALT S   &hml LCTRL D   &hml LSHFT F   &kp G         &kp C_MUTE        &kp C_PLAY_PAUSE  &kp H             &hmr RSHFT J  &hmr RCTRL K         &hmr RALT L     &hmr RGUI SEMI  &kp SQT
+&kp LCTRL  &kp Z         &kp X         &kp C          &kp V          &kp B         &kp LEFT_BRACKET  &kp RIGHT_BRACKET &kp N             &kp M         &numfn KP_COMMA COMMA &numfn KP_DOT DOT &numfn KP_SLASH FSLH &kp BSLH
+                                       &mo LWR        &mo RSE        &mo LWR       &kp SPACE         &kp ENTER         &kp BSPC          &kp DELETE    &mo RSE
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP &inc_dec_kp PG_UP PG_DN>;
@@ -120,19 +136,21 @@
         lower_layer {
             display-name = "Lower";
 
-            // ---------------------------------------------------------------------------------------------------------------
-            //  0| `     | F1  | F2  | F3  | F4  | F5  |                     | F6   | F7   | F8  | F9  | F10  |  _   | 11
-            // 12|       |  !  | HOME|  ^  | END |  %  |                     | VOL+ | PGUP | INS |  ^  | PSCR |  +   | 23
-            // 24|       |  #  |  <- |  v  |  -> |  $  |     |    |          | VOL- |  <-  |  ^  |  -> |  ~   |  _   | 37
-            // 38|       |  @  |  -  |  {  |  }  |  &  |     |    |          | MUTE | PGDN |  v  |  :  |  *   |  |   | 51
-            // 52                     F11  |     |     |     |    |          |      |      | F12 |                     59
+            // ------------------------------------------------------------------------------------------------------------------
+            //  0|       | F1  | F2  | F3  | F4  | F5  |                    | F6  | F7  | F8  | F9  | F10 |  -  | 11
+            // 12|       |  7  |  8  |  9  | INS | HOME|                    |     |     |     |     |PSCRN|  +  | 23
+            // 24|       |  4  |  5  |  6  | DEL | END |     |     |        |  <- |  v  |  ^  |  -> |  ~  |     | 37
+            // 38|       |  1  |  2  |  3  |     |     | F11 |     | F12    |     |     |     |     |     |     | 51
+            // 52                      0    |     |     |     |     |       |     |     |     |                   59
+            //
+            // Numpad under the left hand, vim-style arrows under hjkl on the right.
 
             bindings = <
-&kp GRAVE  &kp F1    &kp F2     &kp F3    &kp F4     &kp F5                     &kp F6        &kp F7     &kp F8    &kp F9     &kp F10    &kp UNDERSCORE
-&trans     &kp EXCL  &kp HOME   &kp UP    &kp END    &kp PRCNT                  &kp C_VOL_UP  &kp PG_UP  &kp INS   &kp CARET  &kp PSCRN  &kp PLUS
-&trans     &kp HASH  &kp LEFT   &kp DOWN  &kp RIGHT  &kp DLLR   &trans  &trans  &kp C_VOL_DN  &kp LEFT   &kp UP    &kp RIGHT  &kp TILDE  &kp UNDER
-&trans     &kp AT    &kp MINUS  &kp LBRC  &kp RBRC   &kp AMPS   &trans  &trans  &kp C_MUTE    &kp PG_DN  &kp DOWN  &kp COLON  &kp STAR   &kp PIPE
-                                &kp F11   &trans     &trans     &trans  &trans  &trans        &trans     &kp F12
+&trans  &kp F1       &kp F2       &kp F3       &kp F4     &kp F5                    &kp F6     &kp F7     &kp F8   &kp F9      &kp F10    &kp KP_MINUS
+&trans  &kp KP_N7    &kp KP_N8    &kp KP_N9    &kp INS    &kp HOME                  &trans     &trans     &trans   &trans      &kp PSCRN  &kp KP_PLUS
+&trans  &kp KP_N4    &kp KP_N5    &kp KP_N6    &kp DEL    &kp END    &trans  &trans &kp LEFT   &kp DOWN   &kp UP   &kp RIGHT   &kp TILDE  &trans
+&trans  &kp KP_N1    &kp KP_N2    &kp KP_N3    &trans     &trans     &kp F11 &kp F12 &trans    &trans     &trans   &trans      &trans     &trans
+                                  &kp KP_N0    &trans     &trans     &trans  &trans &trans     &trans     &trans
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP &inc_dec_kp C_NEXT C_PREV>;
@@ -141,21 +159,21 @@
         raise_layer {
             display-name = "Raise";
 
-            // ---------------------------------------------------------------------------------------------------------------
-            //  0| BTCLR | BT1  | BT2  | BT3   | BT4   | BT5  |                | OUTTOG| OUTUSB| OUTBT | STUDIO| RESET | BOOTL | 11
-            // 12|       | INS  | PSCR | MENU  | RESET |      |                | PGUP  |       |   ^   |       |       |       | 23
-            // 24|       | ALT  | CTRL | SHIFT | BOOTL | CAPS |    |    |      | PGDN  |  <-   |   v   |  ->   |  DEL  | BSPC  | 37
-            // 38|       | UNDO | CUT  | COPY  | PASTE |      |    |    |      |       | PLAY  | PREV  | NEXT  |       |       | 51
-            // 52                        |     |       |      |    |    |      |       |       |       |                        59
+            // ------------------------------------------------------------------------------------------------------------------
+            //  0| BTCLR | BT1  | BT2  | BT3  | BT4   | BT5 |                | OUTTOG| OUTUSB| OUTBT | STUDIO| RESET | BOOTL | 11
+            // 12|       | BRI+ | BRI- | PLAY | PSCRN |     |                | PGUP  |       |   ^   |       |       |       | 23
+            // 24|       | ALT  | CTRL | SHIFT| BOOTL | CAPS|     |     |    | PGDN  |  <-   |   v   |  ->   |  DEL  | BSPC  | 37
+            // 38|       | UNDO | CUT  | COPY | PASTE |     |     |     |    |       | PLAY  | PREV  | NEXT  |       |       | 51
+            // 52                       |     |       |     |     |     |    |       |       |       |                         59
             //
-            // STUDIO = &studio_unlock, required to let ZMK Studio edit the keymap live.
+            // STUDIO = &studio_unlock, required before ZMK Studio may edit the keymap.
 
             bindings = <
-&bt BT_CLR  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4                  &out OUT_TOG  &out OUT_USB  &out OUT_BLE  &studio_unlock  &sys_reset  &bootloader
-&trans      &kp INS       &kp PSCRN     &kp K_CMENU   &sys_reset    &trans                        &kp PG_UP     &trans        &kp UP        &trans      &trans      &trans
-&trans      &kp LALT      &kp LCTRL     &kp LSHFT     &bootloader   &kp CLCK      &trans  &trans  &kp PG_DN     &kp LEFT      &kp DOWN      &kp RIGHT   &kp DEL     &kp BSPC
-&trans      &kp K_UNDO    &kp K_CUT     &kp K_COPY    &kp K_PASTE   &trans        &trans  &trans  &trans        &kp C_PP      &kp C_PREV    &kp C_NEXT  &trans      &trans
-                                        &trans        &trans        &trans        &trans  &trans  &trans        &trans        &trans
+&bt BT_CLR  &bt BT_SEL 0          &bt BT_SEL 1          &bt BT_SEL 2      &bt BT_SEL 3  &bt BT_SEL 4                  &out OUT_TOG  &out OUT_USB  &out OUT_BLE  &studio_unlock  &sys_reset  &bootloader
+&trans      &kp C_BRIGHTNESS_INC  &kp C_BRIGHTNESS_DEC  &kp C_PLAY_PAUSE  &kp PSCRN     &trans                        &kp PG_UP     &trans        &kp UP        &trans          &trans      &trans
+&trans      &kp LALT              &kp LCTRL             &kp LSHFT         &bootloader   &kp CLCK      &trans  &trans  &kp PG_DN     &kp LEFT      &kp DOWN      &kp RIGHT       &kp DEL     &kp BSPC
+&trans      &kp K_UNDO            &kp K_CUT             &kp K_COPY        &kp K_PASTE   &trans        &trans  &trans  &trans        &kp C_PP      &kp C_PREV    &kp C_NEXT      &trans      &trans
+                                                        &trans            &trans        &trans        &trans  &trans  &trans        &trans        &trans
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP &inc_dec_kp PG_UP PG_DN>;
