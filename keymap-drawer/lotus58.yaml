@@ -140,7 +140,7 @@ layers:
   - BRIGHTNESS DEC
   - PLAY PAUSE
   - PSCRN
-  - {t: ▽, type: trans}
+  - '&studio_unlock'
   - PG UP
   - {t: ▽, type: trans}
   - UP
